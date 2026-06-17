@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket_launch.launch">
+    <arg name="port" value="9090"/>
+  </include>
+
+  <node pkg="mrrep_web_bridge" type="hrz_costmap_node.py" name="hrz_costmap_node" output="screen"/>
+  <node pkg="mrrep_web_bridge" type="hrp_planner_node.py" name="hrp_planner_node" output="screen"/>
+</launch>
