@@ -8,6 +8,7 @@ import { HRZEditor3D } from '../editor/HRZEditor3D';
 import { HRPEditor3D } from '../editor/HRPEditor3D';
 import { NavPathVisual } from './NavPathVisual';
 import { MapEditPreview } from './MapEditPreview';
+import { MiniMap } from './MiniMap';
 import type { AppMode } from '../ui/ModeSelector';
 import { useHRZStore } from '../../stores/hrzStore';
 import { useHRPStore } from '../../stores/hrpStore';
@@ -180,6 +181,7 @@ export function Scene3D({ mode }: { mode: AppMode }) {
         <NavPathVisual path={plannedPath} color="#ff4081" />
       )}
       <CameraControls mode={mode} />
+      <MiniMap />
       <gridHelper args={[50, 50, '#555', '#333']} position={[5, 0, 5]} />
     </Canvas>
   );
