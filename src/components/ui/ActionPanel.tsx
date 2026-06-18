@@ -52,6 +52,14 @@ export function ActionPanel({ mode }: ActionPanelProps) {
     }
   };
 
+  const handleCancelNav = () => {
+    if (isMock) {
+      mockCancelNav();
+    } else {
+      useNavTargetStore.getState().clearNav();
+    }
+  };
+
   const canPublish = isConnected;
 
   return (
@@ -69,7 +77,7 @@ export function ActionPanel({ mode }: ActionPanelProps) {
                     Navigating to ({navTarget.x.toFixed(1)}, {navTarget.z.toFixed(1)})...
                   </div>
                   <button
-                    onClick={mockCancelNav}
+                    onClick={handleCancelNav}
                     className="w-full text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded"
                   >
                     Cancel Navigation
@@ -77,14 +85,33 @@ export function ActionPanel({ mode }: ActionPanelProps) {
                 </>
               )}
             </>
+          ) : isConnected ? (
+            <>
+              <div className="text-xs text-gray-400">
+                Left-click on the map to send a navigation goal. The robot will navigate via move_base.
+              </div>
+              {navTarget && (
+                <>
+                  <div className="text-xs text-blue-400">
+                    Goal sent: ({navTarget.x.toFixed(1)}, {navTarget.z.toFixed(1)})
+                  </div>
+                  <button
+                    onClick={handleCancelNav}
+                    className="w-full text-xs bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 rounded"
+                  >
+                    Clear Goal
+                  </button>
+                </>
+              )}
+            </>
           ) : (
             <div className="text-xs text-gray-400">
-              Right-click to rotate. Middle-click to pan. Scroll to zoom.
+              Connect to ROS to enable navigation. Right-click to rotate, middle-click to pan, scroll to zoom.
             </div>
           )}
         </>
       )}
-      {mode === 'mapedit' && (
+      {mode === 'mapedit' && isMock && (
         <>
           <div className="text-xs text-gray-400">Edit the map by drawing walls and obstacles.</div>
           <div className="space-y-1">
@@ -141,7 +168,7 @@ export function ActionPanel({ mode }: ActionPanelProps) {
             disabled={!canPublish || hrz.zones.length === 0}
             className="w-full text-xs bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded"
           >
-            Publish HRZ Zones ({hrz.zones.length})
+            {isMock ? 'Apply Zones to Map' : 'Publish HRZ Zones'} ({hrz.zones.length})
           </button>
           <button
             onClick={hrz.cancelDrawing}
@@ -163,14 +190,16 @@ export function ActionPanel({ mode }: ActionPanelProps) {
       {mode === 'hrp' && (
         <>
           <div className="text-xs text-gray-400">
-            Draw a path by clicking & dragging. Robot will follow the exact drawn path.
+            {isMock
+              ? 'Draw a path by clicking & dragging. Robot will follow with obstacle avoidance.'
+              : 'Draw a path by clicking & dragging, then publish to ROS.'}
           </div>
           <button
             onClick={handlePublishHRP}
             disabled={!canPublish || hrp.path.length < 2}
             className="w-full text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded"
           >
-            Follow Drawn Path ({hrp.path.length} pts)
+            {isMock ? 'Follow Drawn Path' : 'Publish HRP Path'} ({hrp.path.length} pts)
           </button>
           <button
             onClick={hrp.clearPath}

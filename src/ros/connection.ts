@@ -39,6 +39,8 @@ export function disconnect(): void {
   if (odomSub) { odomSub.unsubscribe(); odomSub = null; }
   if (ros) { ros.close(); ros = null; }
   useRosStore.getState().setStatus('disconnected');
+  useMapStore.getState().setGrid(null as unknown as OccupancyGridData);
+  useRobotPoseStore.getState().setPose({ x: 2, z: 2, yaw: 0 });
 }
 
 function subscribeAll(): void {
@@ -85,6 +87,26 @@ function subscribeAll(): void {
 
 export function getRos(): Ros | null {
   return ros;
+}
+
+export function publishNavGoal(x: number, z: number, yaw: number = 0): void {
+  if (!ros) return;
+  const topic = new Topic({
+    ros,
+    name: '/move_base_simple/goal',
+    messageType: 'geometry_msgs/PoseStamped',
+  });
+  const msg = {
+    header: {
+      frame_id: 'map',
+      stamp: { secs: Math.floor(Date.now() / 1000), nsecs: 0 },
+    },
+    pose: {
+      position: { x, y: 0, z },
+      orientation: { x: 0, y: 0, z: Math.sin(yaw / 2), w: Math.cos(yaw / 2) },
+    },
+  };
+  topic.publish(msg as never);
 }
 
 export function publishHRZZones(json: string): void {

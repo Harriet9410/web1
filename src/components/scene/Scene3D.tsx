@@ -16,6 +16,7 @@ import { useRosStore } from '../../stores/rosStore';
 import { useNavTargetStore } from '../../stores/navTargetStore';
 import { useMapEditorStore } from '../../stores/mapEditorStore';
 import { mockNavigateTo, mockCancelNav, mockPaintBrush, mockPaintRect, mockPlaceRobot } from '../../ros/mock';
+import { publishNavGoal } from '../../ros/connection';
 import { Vec2, dist } from '../../utils/coordinate';
 
 function SceneEvents({ mode }: { mode: AppMode }) {
@@ -56,13 +57,16 @@ function SceneEvents({ mode }: { mode: AppMode }) {
         store.addPoint(pt);
         lastPathPoint.current = pt;
       } else if (mode === 'navigate') {
-        const isMock = useRosStore.getState().isMock;
-        if (isMock) {
+        const rosStore = useRosStore.getState();
+        if (rosStore.isMock) {
           const navStore = useNavTargetStore.getState();
           if (navStore.navigating) {
             mockCancelNav();
           }
           mockNavigateTo(pt.x, pt.z);
+        } else if (rosStore.status === 'connected') {
+          publishNavGoal(pt.x, pt.z);
+          useNavTargetStore.getState().setTarget(pt);
         }
       } else if (mode === 'mapedit') {
         const isMock = useRosStore.getState().isMock;
