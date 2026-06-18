@@ -4,11 +4,11 @@ import { useRobotPoseStore } from '../stores/robotPoseStore';
 import { useNavTargetStore } from '../stores/navTargetStore';
 import type { OccupancyGridData } from '../utils/mapRenderer';
 
-const MAP_WIDTH = 100;
-const MAP_HEIGHT = 100;
-const RESOLUTION = 0.1;
+const MAP_WIDTH = 500;
+const MAP_HEIGHT = 500;
+const RESOLUTION = 0.02;
 const OCCUPIED = 254;
-const ROBOT_RADIUS_CELLS = 2;
+const ROBOT_RADIUS_CELLS = 8;
 
 let mockTimer: ReturnType<typeof setInterval> | null = null;
 let odomTimer: ReturnType<typeof setInterval> | null = null;
@@ -48,13 +48,13 @@ function generateMockGrid(): OccupancyGridData {
       const isBorder =
         row === 0 || row === MAP_HEIGHT - 1 || col === 0 || col === MAP_WIDTH - 1;
       const isInnerWall =
-        (row === 30 && col >= 20 && col <= 70) ||
-        (row === 60 && col >= 30 && col <= 80) ||
-        (col === 50 && row >= 30 && row <= 60) ||
-        (col === 25 && row >= 10 && row <= 40);
+        (row >= 148 && row <= 152 && col >= 100 && col <= 350) ||
+        (row >= 298 && row <= 302 && col >= 150 && col <= 400) ||
+        (col >= 248 && col <= 252 && row >= 150 && row <= 300) ||
+        (col >= 123 && col <= 127 && row >= 50 && row <= 200);
       const isObstacle =
-        (row >= 75 && row <= 80 && col >= 10 && col <= 20) ||
-        (row >= 40 && row <= 50 && col >= 70 && col <= 80);
+        (row >= 375 && row <= 400 && col >= 50 && col <= 100) ||
+        (row >= 200 && row <= 250 && col >= 350 && col <= 400);
 
       if (isBorder || isInnerWall || isObstacle) {
         data.push(OCCUPIED);
@@ -111,7 +111,7 @@ function aStar(
   ];
 
   let iterations = 0;
-  const maxIterations = 50000;
+  const maxIterations = 200000;
 
   while (open.length > 0 && iterations < maxIterations) {
     iterations++;

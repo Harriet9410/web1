@@ -71,8 +71,8 @@ function SceneEvents({ mode }: { mode: AppMode }) {
         const tool = editStore.tool;
 
         if (tool === 'rect') {
-          const col = Math.floor(pt.x / 0.1);
-          const row = Math.floor(pt.z / 0.1);
+          const col = Math.floor(pt.x / 0.02);
+          const row = Math.floor(pt.z / 0.02);
           editStore.setRectStart({ col, row });
         } else if (tool === 'robot') {
           mockPlaceRobot(pt.x, pt.z);
@@ -120,8 +120,8 @@ function SceneEvents({ mode }: { mode: AppMode }) {
           const pt = getScenePoint(e);
           if (pt) {
             const start = editStore.rectStart;
-            const sx = (start.col + 0.5) * 0.1;
-            const sz = (start.row + 0.5) * 0.1;
+            const sx = (start.col + 0.5) * 0.02;
+            const sz = (start.row + 0.5) * 0.02;
             mockPaintRect(sx, sz, pt.x, pt.z, true);
             editStore.setRectStart(null);
           }

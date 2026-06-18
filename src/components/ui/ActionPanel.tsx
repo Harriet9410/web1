@@ -109,7 +109,7 @@ export function ActionPanel({ mode }: ActionPanelProps) {
               <input
                 type="range"
                 min={1}
-                max={5}
+                max={15}
                 value={brushSize}
                 onChange={(e) => useMapEditorStore.getState().setBrushSize(Number(e.target.value))}
                 className="flex-1 h-1 accent-blue-500"
