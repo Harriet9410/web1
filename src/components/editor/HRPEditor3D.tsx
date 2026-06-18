@@ -33,6 +33,7 @@ function makeTextTexture(text: string, color: string, bgColor: string): THREE.Ca
 export function HRPEditor3D({ robotX, robotZ }: HRPEditor3DProps) {
   const path = useHRPStore((s) => s.path);
   const segmentSpeeds = useHRPStore((s) => s.segmentSpeeds);
+  const blockedSegments = useHRPStore((s) => s.blockedSegments);
   const selectedSegment = useHRPStore((s) => s.selectedSegment);
   const toggleSegmentSpeed = useHRPStore((s) => s.toggleSegmentSpeed);
   const setSelectedSegment = useHRPStore((s) => s.setSelectedSegment);
@@ -85,6 +86,7 @@ export function HRPEditor3D({ robotX, robotZ }: HRPEditor3DProps) {
             speed={speed}
             index={i}
             isSelected={isSelected}
+            blocked={!!blockedSegments[i]}
             onClick={() => toggleSegmentSpeed(i)}
             onHover={(hovered) => setSelectedSegment(hovered ? i : null)}
           />
@@ -125,11 +127,12 @@ interface PathSegmentProps {
   speed: SegmentSpeed;
   index: number;
   isSelected: boolean;
+  blocked: boolean;
   onClick: () => void;
   onHover: (hovered: boolean) => void;
 }
 
-function PathSegment({ from, to, color, speed, index, isSelected, onClick, onHover }: PathSegmentProps) {
+function PathSegment({ from, to, color, speed, index, isSelected, blocked, onClick, onHover }: PathSegmentProps) {
   const positions = useMemo(() => {
     return new Float32Array([from.x, 0.05, from.z, to.x, 0.05, to.z]);
   }, [from, to]);
@@ -138,17 +141,32 @@ function PathSegment({ from, to, color, speed, index, isSelected, onClick, onHov
   const midZ = (from.z + to.z) / 2;
   const segDist = dist(from, to);
 
-  const label = speedToLabel(speed);
+  const label = blocked ? 'X' : speedToLabel(speed);
+  const displayColor = blocked ? '#dc2626' : color;
   const bgOpacity = isSelected ? 0.85 : 0.6;
-  const texture = useMemo(() => makeTextTexture(label, '#ffffff', color), [label, color]);
+  const texture = useMemo(() => makeTextTexture(label, '#ffffff', displayColor), [label, displayColor]);
 
   const handleClick = useCallback((e: any) => { e.stopPropagation(); onClick(); }, [onClick]);
   const handleOver = useCallback((e: any) => { e.stopPropagation(); onHover(true); }, [onHover]);
   const handleOut = useCallback(() => onHover(false), [onHover]);
 
+  const lineRef = useRef<any>(null);
+
+  useFrame((_, delta) => {
+    if (blocked && lineRef.current) {
+      const mat = lineRef.current.material as THREE.LineDashedMaterial;
+      if (mat.isLineDashedMaterial) {
+        (mat as any).dashOffset -= delta * 1.5;
+        mat.needsUpdate = true;
+      }
+      lineRef.current.computeLineDistances();
+    }
+  });
+
   return (
     <group>
       <line
+        ref={blocked ? lineRef : undefined}
         onPointerDown={handleClick}
         onPointerOver={handleOver}
         onPointerOut={handleOut}
@@ -161,7 +179,11 @@ function PathSegment({ from, to, color, speed, index, isSelected, onClick, onHov
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={color} linewidth={isSelected ? 4 : 2} />
+        {blocked ? (
+          <lineDashedMaterial color="#dc2626" dashSize={0.15} gapSize={0.1} linewidth={isSelected ? 4 : 2} />
+        ) : (
+          <lineBasicMaterial color={color} linewidth={isSelected ? 4 : 2} />
+        )}
       </line>
       {segDist > 0.2 && (
         <sprite position={[midX, 0.15, midZ]} scale={[0.5, 0.25, 1]} onPointerDown={handleClick}>
@@ -171,7 +193,7 @@ function PathSegment({ from, to, color, speed, index, isSelected, onClick, onHov
       {segDist > 0.2 && (
         <mesh position={[midX, 0.08, midZ]} onClick={handleClick}>
           <planeGeometry args={[segDist * 0.8, 0.15]} />
-          <meshBasicMaterial color={color} transparent opacity={0.15} side={2} />
+          <meshBasicMaterial color={displayColor} transparent opacity={0.15} side={2} />
         </mesh>
       )}
     </group>

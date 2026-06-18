@@ -2,10 +2,12 @@ import { useHRZStore } from '../../stores/hrzStore';
 import { useHRPStore, SPEED_LEVELS, speedToColor, SegmentSpeed } from '../../stores/hrpStore';
 import { useRosStore } from '../../stores/rosStore';
 import { useWaypointStore } from '../../stores/waypointStore';
+import { useMapStore } from '../../stores/mapStore';
 import { useMapEditorStore, MapTool } from '../../stores/mapEditorStore';
 import { publishHRZZones, publishHRPPath, publishHRPSpeeds } from '../../ros/connection';
 import { mockPublishHRZZones, mockPublishHRPPath, mockStartWaypointNav, mockCancelNav, mockResetMap, mockClearMap } from '../../ros/mock';
 import { sceneToRos } from '../../utils/coordinate';
+import { checkPathReachability } from '../../utils/pathCheck';
 import type { AppMode } from '../ui/ModeSelector';
 
 interface ActionPanelProps {
@@ -50,6 +52,13 @@ export function ActionPanel({ mode }: ActionPanelProps) {
       publishHRPPath(rosPoints);
       publishHRPSpeeds(hrp.segmentSpeeds);
     }
+  };
+
+  const handleCheckPath = () => {
+    const grid = useMapStore.getState().grid;
+    if (!grid || hrp.path.length < 2) return;
+    const blocked = checkPathReachability(grid, hrp.path);
+    hrp.setBlockedSegments(blocked);
   };
 
   const handleStartNav = () => {
@@ -278,9 +287,9 @@ export function ActionPanel({ mode }: ActionPanelProps) {
                     />
                     <span
                       className="px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 min-w-[52px] text-center"
-                      style={{ backgroundColor: speedToColor(speed) + 'cc', color: '#fff' }}
+                      style={{ backgroundColor: (hrp.blockedSegments[i] ? '#dc2626' : speedToColor(speed)) + 'cc', color: '#fff' }}
                     >
-                      {speed.toFixed(1)} m/s
+                      {hrp.blockedSegments[i] ? 'BLOCKED' : `${speed.toFixed(1)} m/s`}
                     </span>
                   </div>
                 ))}
@@ -299,6 +308,24 @@ export function ActionPanel({ mode }: ActionPanelProps) {
                   All {SPEED_LEVELS[0]} m/s
                 </button>
               </div>
+            </div>
+          )}
+          <button
+            onClick={handleCheckPath}
+            disabled={hrp.path.length < 2}
+            className="w-full text-xs bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded"
+          >
+            Check Path ({hrp.path.length} pts)
+          </button>
+          {hrp.blockedSegments.length > 0 && (
+            <div className="text-xs">
+              {hrp.blockedSegments.some((b) => b) ? (
+                <span className="text-red-400">
+                  Blocked segments: {hrp.blockedSegments.map((b, i) => b ? i + 1 : null).filter(Boolean).join(', ')}
+                </span>
+              ) : (
+                <span className="text-green-400">All segments reachable</span>
+              )}
             </div>
           )}
           <button

@@ -24,6 +24,7 @@ export function cycleSpeed(current: SegmentSpeed): SegmentSpeed {
 interface HRPState {
   path: Vec2[];
   segmentSpeeds: SegmentSpeed[];
+  blockedSegments: boolean[];
   isDrawing: boolean;
   selectedSegment: number | null;
   startDrawing: () => void;
@@ -35,31 +36,33 @@ interface HRPState {
   setSegmentSpeed: (index: number, speed: SegmentSpeed) => void;
   toggleSegmentSpeed: (index: number) => void;
   setSelectedSegment: (index: number | null) => void;
+  setBlockedSegments: (blocked: boolean[]) => void;
 }
 
 export const useHRPStore = create<HRPState>((set) => ({
   path: [],
   segmentSpeeds: [],
+  blockedSegments: [],
   isDrawing: false,
   selectedSegment: null,
 
-  startDrawing: () => set({ isDrawing: true, path: [], segmentSpeeds: [], selectedSegment: null }),
+  startDrawing: () => set({ isDrawing: true, path: [], segmentSpeeds: [], blockedSegments: [], selectedSegment: null }),
 
   addPoint: (p) =>
     set((s) => {
       if (!s.isDrawing) return s;
       const newPath = [...s.path, p];
       const newSpeeds = s.path.length > 0 ? [...s.segmentSpeeds, DEFAULT_SPEED] : s.segmentSpeeds;
-      return { path: newPath, segmentSpeeds: newSpeeds };
+      return { path: newPath, segmentSpeeds: newSpeeds, blockedSegments: [] };
     }),
 
   finishDrawing: () => set({ isDrawing: false }),
 
-  cancelDrawing: () => set({ isDrawing: false, path: [], segmentSpeeds: [], selectedSegment: null }),
+  cancelDrawing: () => set({ isDrawing: false, path: [], segmentSpeeds: [], blockedSegments: [], selectedSegment: null }),
 
-  loadPath: (path) => set({ path, segmentSpeeds: path.length > 1 ? new Array(path.length - 1).fill(DEFAULT_SPEED) : [], selectedSegment: null }),
+  loadPath: (path) => set({ path, segmentSpeeds: path.length > 1 ? new Array(path.length - 1).fill(DEFAULT_SPEED) : [], blockedSegments: [], selectedSegment: null }),
 
-  clearPath: () => set({ path: [], segmentSpeeds: [], isDrawing: false, selectedSegment: null }),
+  clearPath: () => set({ path: [], segmentSpeeds: [], blockedSegments: [], isDrawing: false, selectedSegment: null }),
 
   setSegmentSpeed: (index, speed) =>
     set((s) => {
@@ -67,7 +70,7 @@ export const useHRPStore = create<HRPState>((set) => ({
       if (index >= 0 && index < newSpeeds.length) {
         newSpeeds[index] = speed;
       }
-      return { segmentSpeeds: newSpeeds };
+      return { segmentSpeeds: newSpeeds, blockedSegments: [] };
     }),
 
   toggleSegmentSpeed: (index) =>
@@ -80,4 +83,6 @@ export const useHRPStore = create<HRPState>((set) => ({
     }),
 
   setSelectedSegment: (index) => set({ selectedSegment: index }),
+
+  setBlockedSegments: (blocked) => set({ blockedSegments: blocked }),
 }));
