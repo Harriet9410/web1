@@ -4,9 +4,37 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useMapStore } from '../../stores/mapStore';
 import { useRobotPoseStore } from '../../stores/robotPoseStore';
 import { useWaypointStore } from '../../stores/waypointStore';
-import { renderMapToCanvas } from '../../utils/mapRenderer';
+import type { OccupancyGridData } from '../../utils/mapRenderer';
 
 const MINIMAP_SIZE = 180;
+const UNKNOWN = 205;
+const FREE = 0;
+const OCCUPIED = 254;
+
+function renderMiniMapCanvas(
+  canvas: HTMLCanvasElement,
+  grid: OccupancyGridData
+): void {
+  const { width, height, data } = grid;
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const imgData = ctx.createImageData(width, height);
+  for (let i = 0; i < data.length; i++) {
+    const val = data[i];
+    let gray: number;
+    if (val === UNKNOWN) gray = 128;
+    else if (val === FREE) gray = 254;
+    else if (val === OCCUPIED) gray = 0;
+    else gray = 254 - val;
+    imgData.data[i * 4] = gray;
+    imgData.data[i * 4 + 1] = gray;
+    imgData.data[i * 4 + 2] = gray;
+    imgData.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
 
 export function MiniMapBridge() {
   const grid = useMapStore((s) => s.grid);
@@ -17,7 +45,7 @@ export function MiniMapBridge() {
   useEffect(() => {
     if (!grid) return;
     const offscreen = document.createElement('canvas');
-    renderMapToCanvas(offscreen, grid);
+    renderMiniMapCanvas(offscreen, grid);
     mapCanvasRef.current = offscreen;
     sizeRef.current = { mapW: grid.width * grid.resolution, mapH: grid.height * grid.resolution };
   }, [grid]);
@@ -59,7 +87,7 @@ export function MiniMapBridge() {
   return null;
 }
 
-export interface MiniMapData {
+interface MiniMapDataObj {
   mapCanvas: HTMLCanvasElement | null;
   robotX: number;
   robotZ: number;
@@ -72,7 +100,7 @@ export interface MiniMapData {
   version: number;
 }
 
-export const miniMapData: MiniMapData = {
+const miniMapData: MiniMapDataObj = {
   mapCanvas: null,
   robotX: 0,
   robotZ: 0,
@@ -119,31 +147,31 @@ export function MiniMapOverlay() {
       ctx.drawImage(d.mapCanvas, 0, 0, drawW, drawH);
 
       const rx = d.robotX * d.scale;
-      const rz = drawH - d.robotZ * d.scale;
+      const ry = d.robotZ * d.scale;
       ctx.fillStyle = '#ff4081';
       ctx.beginPath();
-      ctx.arc(rx, rz, 3, 0, Math.PI * 2);
+      ctx.arc(rx, ry, 3, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ff4081';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(rx, rz);
-      ctx.lineTo(rx + Math.sin(d.robotYaw) * 8, rz + Math.cos(d.robotYaw) * 8);
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx + Math.sin(d.robotYaw) * 8, ry + Math.cos(d.robotYaw) * 8);
       ctx.stroke();
 
       if (d.waypoints.length > 0) {
         ctx.strokeStyle = '#42a5f5';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(d.waypoints[0].x * d.scale, drawH - d.waypoints[0].z * d.scale);
+        ctx.moveTo(d.waypoints[0].x * d.scale, d.waypoints[0].z * d.scale);
         for (let i = 1; i < d.waypoints.length; i++) {
-          ctx.lineTo(d.waypoints[i].x * d.scale, drawH - d.waypoints[i].z * d.scale);
+          ctx.lineTo(d.waypoints[i].x * d.scale, d.waypoints[i].z * d.scale);
         }
         ctx.stroke();
         for (const wp of d.waypoints) {
           ctx.fillStyle = '#42a5f5';
           ctx.beginPath();
-          ctx.arc(wp.x * d.scale, drawH - wp.z * d.scale, 2.5, 0, Math.PI * 2);
+          ctx.arc(wp.x * d.scale, wp.z * d.scale, 2.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -152,9 +180,9 @@ export function MiniMapOverlay() {
         ctx.strokeStyle = '#fdd835';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(d.viewportCorners[0].x * d.scale, drawH - d.viewportCorners[0].z * d.scale);
+        ctx.moveTo(d.viewportCorners[0].x * d.scale, d.viewportCorners[0].z * d.scale);
         for (let i = 1; i < 4; i++) {
-          ctx.lineTo(d.viewportCorners[i].x * d.scale, drawH - d.viewportCorners[i].z * d.scale);
+          ctx.lineTo(d.viewportCorners[i].x * d.scale, d.viewportCorners[i].z * d.scale);
         }
         ctx.closePath();
         ctx.stroke();
