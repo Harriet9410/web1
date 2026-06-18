@@ -274,8 +274,8 @@ function normalizeAngle(a: number): number {
   return a;
 }
 
-const MAX_LINEAR_SPEED = 0.12;
-const MAX_ANGULAR_SPEED = 1.5;
+const MAX_LINEAR_SPEED = 0.5;
+const MAX_ANGULAR_SPEED = 2.0;
 const ANGLE_THRESHOLD = 0.15;
 const ARRIVE_THRESHOLD = 0.04;
 
