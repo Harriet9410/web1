@@ -119,7 +119,7 @@ export function MiniMapOverlay() {
       ctx.drawImage(d.mapCanvas, 0, 0, drawW, drawH);
 
       const rx = d.robotX * d.scale;
-      const rz = d.robotZ * d.scale;
+      const rz = drawH - d.robotZ * d.scale;
       ctx.fillStyle = '#ff4081';
       ctx.beginPath();
       ctx.arc(rx, rz, 3, 0, Math.PI * 2);
@@ -128,22 +128,22 @@ export function MiniMapOverlay() {
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(rx, rz);
-      ctx.lineTo(rx + Math.sin(d.robotYaw) * 8, rz - Math.cos(d.robotYaw) * 8);
+      ctx.lineTo(rx + Math.sin(d.robotYaw) * 8, rz + Math.cos(d.robotYaw) * 8);
       ctx.stroke();
 
       if (d.waypoints.length > 0) {
         ctx.strokeStyle = '#42a5f5';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(d.waypoints[0].x * d.scale, d.waypoints[0].z * d.scale);
+        ctx.moveTo(d.waypoints[0].x * d.scale, drawH - d.waypoints[0].z * d.scale);
         for (let i = 1; i < d.waypoints.length; i++) {
-          ctx.lineTo(d.waypoints[i].x * d.scale, d.waypoints[i].z * d.scale);
+          ctx.lineTo(d.waypoints[i].x * d.scale, drawH - d.waypoints[i].z * d.scale);
         }
         ctx.stroke();
         for (const wp of d.waypoints) {
           ctx.fillStyle = '#42a5f5';
           ctx.beginPath();
-          ctx.arc(wp.x * d.scale, wp.z * d.scale, 2.5, 0, Math.PI * 2);
+          ctx.arc(wp.x * d.scale, drawH - wp.z * d.scale, 2.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -152,9 +152,9 @@ export function MiniMapOverlay() {
         ctx.strokeStyle = '#fdd835';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(d.viewportCorners[0].x * d.scale, d.viewportCorners[0].z * d.scale);
+        ctx.moveTo(d.viewportCorners[0].x * d.scale, drawH - d.viewportCorners[0].z * d.scale);
         for (let i = 1; i < 4; i++) {
-          ctx.lineTo(d.viewportCorners[i].x * d.scale, d.viewportCorners[i].z * d.scale);
+          ctx.lineTo(d.viewportCorners[i].x * d.scale, drawH - d.viewportCorners[i].z * d.scale);
         }
         ctx.closePath();
         ctx.stroke();
