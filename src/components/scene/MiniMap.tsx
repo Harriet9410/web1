@@ -5,6 +5,7 @@ import { useMapStore } from '../../stores/mapStore';
 import { useRobotPoseStore } from '../../stores/robotPoseStore';
 import { useWaypointStore } from '../../stores/waypointStore';
 import { useHRPStore } from '../../stores/hrpStore';
+import { useNavPlanStore } from '../../stores/navPlanStore';
 import type { OccupancyGridData } from '../../utils/mapRenderer';
 
 const MINIMAP_SIZE = 180;
@@ -61,6 +62,7 @@ export function MiniMapBridge() {
     const robotPose = useRobotPoseStore.getState().pose;
     const wpStore = useWaypointStore.getState();
     const hrpStore = useHRPStore.getState();
+    const navPlanStore = useNavPlanStore.getState();
 
     const raycaster = new THREE.Raycaster();
     const ndcCorners: [number, number][] = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
@@ -81,6 +83,7 @@ export function MiniMapBridge() {
     miniMapData.waypoints = wpStore.waypoints;
     miniMapData.plannedPath = wpStore.navigating ? wpStore.plannedPath : [];
     miniMapData.hrpPath = hrpStore.path;
+    miniMapData.moveBasePlan = navPlanStore.moveBasePlan;
     miniMapData.viewportCorners = viewportCorners;
     miniMapData.mapW = mapW;
     miniMapData.mapH = mapH;
@@ -99,6 +102,7 @@ interface MiniMapDataObj {
   waypoints: { x: number; z: number }[];
   plannedPath: { x: number; z: number }[];
   hrpPath: { x: number; z: number }[];
+  moveBasePlan: { x: number; z: number }[];
   viewportCorners: { x: number; z: number }[];
   mapW: number;
   mapH: number;
@@ -114,6 +118,7 @@ const miniMapData: MiniMapDataObj = {
   waypoints: [],
   plannedPath: [],
   hrpPath: [],
+  moveBasePlan: [],
   viewportCorners: [],
   mapW: 10,
   mapH: 10,
@@ -187,6 +192,17 @@ export function MiniMapOverlay() {
         ctx.moveTo(d.hrpPath[0].x * d.scale, d.hrpPath[0].z * d.scale);
         for (let i = 1; i < d.hrpPath.length; i++) {
           ctx.lineTo(d.hrpPath[i].x * d.scale, d.hrpPath[i].z * d.scale);
+        }
+        ctx.stroke();
+      }
+
+      if (d.moveBasePlan.length >= 2) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(d.moveBasePlan[0].x * d.scale, d.moveBasePlan[0].z * d.scale);
+        for (let i = 1; i < d.moveBasePlan.length; i++) {
+          ctx.lineTo(d.moveBasePlan[i].x * d.scale, d.moveBasePlan[i].z * d.scale);
         }
         ctx.stroke();
       }

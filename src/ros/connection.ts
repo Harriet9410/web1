@@ -2,14 +2,16 @@ import { Ros, Topic } from 'roslib';
 import { useRosStore } from '../stores/rosStore';
 import { useMapStore } from '../stores/mapStore';
 import { useRobotPoseStore } from '../stores/robotPoseStore';
+import { useNavPlanStore } from '../stores/navPlanStore';
 import { OccupancyGridData } from '../utils/mapRenderer';
 import { quaternionToYaw } from '../utils/coordinate';
 import type { SegmentSpeed } from '../stores/hrpStore';
-import type { RosMsg_OccupancyGrid, RosMsg_Odometry } from './types';
+import type { RosMsg_OccupancyGrid, RosMsg_Odometry, RosMsg_Path } from './types';
 
 let ros: Ros | null = null;
 let mapSub: Topic | null = null;
 let odomSub: Topic | null = null;
+let navPlanSub: Topic | null = null;
 let mapOriginX = 0;
 let mapOriginY = 0;
 let mapResolution = 0.05;
@@ -56,10 +58,12 @@ export function connect(url?: string): void {
 export function disconnect(): void {
   if (mapSub) { mapSub.unsubscribe(); mapSub = null; }
   if (odomSub) { odomSub.unsubscribe(); odomSub = null; }
+  if (navPlanSub) { navPlanSub.unsubscribe(); navPlanSub = null; }
   if (ros) { ros.close(); ros = null; }
   useRosStore.getState().setStatus('disconnected');
   useMapStore.getState().setGrid(null as unknown as OccupancyGridData);
   useRobotPoseStore.getState().setPose({ x: 2, z: 2, yaw: 0 });
+  useNavPlanStore.getState().clearMoveBasePlan();
 }
 
 function subscribeAll(): void {
@@ -107,6 +111,19 @@ function subscribeAll(): void {
       z: scenePos.z,
       yaw: Math.PI / 2 - rosYaw,
     });
+  });
+
+  navPlanSub = new Topic({
+    ros,
+    name: '/move_base/NavfnROS/plan',
+    messageType: 'nav_msgs/Path',
+    throttle_rate: 500,
+  });
+
+  navPlanSub.subscribe((msg: unknown) => {
+    const m = msg as RosMsg_Path;
+    const scenePath = m.poses.map((p) => rosToScene(p.pose.position.x, p.pose.position.y));
+    useNavPlanStore.getState().setMoveBasePlan(scenePath);
   });
 }
 

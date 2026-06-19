@@ -18,6 +18,7 @@ import { useWaypointStore, Waypoint } from '../../stores/waypointStore';
 import { useMapEditorStore } from '../../stores/mapEditorStore';
 import { useDragStore } from '../../stores/dragStore';
 import { useUndoStore } from '../../stores/undoStore';
+import { useNavPlanStore } from '../../stores/navPlanStore';
 import { mockPaintBrush, mockPaintRect, mockPlaceRobot } from '../../ros/mock';
 import { publishNavGoal } from '../../ros/connection';
 import { Vec2, dist } from '../../utils/coordinate';
@@ -237,6 +238,7 @@ export function Scene3D({ mode }: { mode: AppMode }) {
   const currentWaypointIdx = useWaypointStore((s) => s.currentWaypointIdx);
   const navigating = useWaypointStore((s) => s.navigating);
   const plannedPath = useWaypointStore((s) => s.plannedPath);
+  const moveBasePlan = useNavPlanStore((s) => s.moveBasePlan);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -271,6 +273,9 @@ export function Scene3D({ mode }: { mode: AppMode }) {
       )}
       {plannedPath.length >= 2 && navigating && (
         <NavPathVisual path={plannedPath} color="#ff4081" />
+      )}
+      {moveBasePlan.length >= 2 && !useRosStore.getState().isMock && (
+        <NavPathVisual path={moveBasePlan} color="#ffffff" opacity={0.5} />
       )}
       <CameraControls mode={mode} />
       <MiniMapBridge />
