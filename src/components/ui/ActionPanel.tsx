@@ -5,6 +5,7 @@ import { useWaypointStore } from '../../stores/waypointStore';
 import { useMapStore } from '../../stores/mapStore';
 import { useMapEditorStore, MapTool } from '../../stores/mapEditorStore';
 import { useUndoStore } from '../../stores/undoStore';
+import { useTeleopStore } from '../../stores/teleopStore';
 import { publishHRZZones, publishHRPPath, publishHRPSpeeds } from '../../ros/connection';
 import { mockPublishHRZZones, mockPublishHRPPath, mockStartWaypointNav, mockCancelNav, mockResetMap, mockClearMap } from '../../ros/mock';
 import { sceneToRos } from '../../utils/coordinate';
@@ -85,6 +86,8 @@ export function ActionPanel({ mode }: ActionPanelProps) {
   };
 
   const canPublish = isConnected;
+  const teleopEnabled = useTeleopStore((s) => s.teleopEnabled);
+  const toggleTeleop = () => useTeleopStore.getState().setTeleopEnabled(!teleopEnabled);
 
   return (
     <div className="space-y-3">
@@ -93,6 +96,16 @@ export function ActionPanel({ mode }: ActionPanelProps) {
           <div className="text-xs text-gray-400">
             Left-click on the map to add waypoints. Robot will navigate to each in order.
           </div>
+          <button
+            onClick={toggleTeleop}
+            className={`w-full text-xs px-3 py-1.5 rounded ${
+              teleopEnabled
+                ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            }`}
+          >
+            {teleopEnabled ? 'WASD Teleop ON' : 'Enable WASD Teleop'}
+          </button>
           {wpStore.waypoints.length > 0 && (
             <div className="space-y-1">
               <div className="text-xs text-gray-300 font-medium">

@@ -3,12 +3,14 @@ import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useCameraStore } from '../../stores/cameraStore';
+import { useRobotPoseStore } from '../../stores/robotPoseStore';
 
 interface CameraControlsProps {
   mode: 'navigate' | 'hrz' | 'hrp' | 'mapedit';
+  followRobot: boolean;
 }
 
-export function CameraControls({ mode }: CameraControlsProps) {
+export function CameraControls({ mode, followRobot }: CameraControlsProps) {
   const controlsRef = useRef<any>(null);
   const { camera } = useThree();
   const camPos = useCameraStore((s) => s.position);
@@ -38,6 +40,10 @@ export function CameraControls({ mode }: CameraControlsProps) {
 
   useFrame(() => {
     if (controlsRef.current) {
+      if (followRobot) {
+        const pose = useRobotPoseStore.getState().pose;
+        controlsRef.current.target.lerp(new THREE.Vector3(pose.x, 0, pose.z), 0.05);
+      }
       const t = controlsRef.current.target;
       const p = camera.position;
       const key = `${p.x.toFixed(2)},${p.y.toFixed(2)},${p.z.toFixed(2)}-${t.x.toFixed(2)},${t.y.toFixed(2)},${t.z.toFixed(2)}`;

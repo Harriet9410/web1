@@ -2,6 +2,7 @@ import { useMapStore } from '../stores/mapStore';
 import { useRosStore } from '../stores/rosStore';
 import { useRobotPoseStore } from '../stores/robotPoseStore';
 import { useWaypointStore } from '../stores/waypointStore';
+import { useToastStore } from '../stores/toastStore';
 import type { SegmentSpeed } from '../stores/hrpStore';
 import type { OccupancyGridData } from '../utils/mapRenderer';
 
@@ -307,10 +308,12 @@ function updateOdom() {
           const nextIdx = wpStore.currentWaypointIdx + 1;
           if (nextIdx < wpStore.waypoints.length) {
             addLog(`Advancing to waypoint ${nextIdx + 1}/${wpStore.waypoints.length}`);
+            useToastStore.getState().addToast(`Reached waypoint ${wpStore.currentWaypointIdx + 1}, heading to ${nextIdx + 1}`, 'success');
             wpStore.setCurrentWaypointIdx(nextIdx);
             navigateToWaypoint(nextIdx);
           } else {
             addLog('All waypoints reached!');
+            useToastStore.getState().addToast('All waypoints reached!', 'success');
             wpStore.setNavigating(false);
             wpStore.setPlannedPath([]);
           }

@@ -9,6 +9,7 @@ import { HRPEditor3D } from '../editor/HRPEditor3D';
 import { NavPathVisual } from './NavPathVisual';
 import { MapEditPreview } from './MapEditPreview';
 import { MiniMapBridge, MiniMapOverlay } from './MiniMap';
+import { BreadcrumbTrail } from './BreadcrumbTrail';
 import type { AppMode } from '../ui/ModeSelector';
 import { useHRZStore, HRZZone } from '../../stores/hrzStore';
 import { useHRPStore } from '../../stores/hrpStore';
@@ -232,7 +233,7 @@ function SceneEvents({ mode }: { mode: AppMode }) {
   return null;
 }
 
-export function Scene3D({ mode }: { mode: AppMode }) {
+export function Scene3D({ mode, followRobot }: { mode: AppMode; followRobot: boolean }) {
   const robotPose = useRobotPoseStore((s) => s.pose);
   const waypoints = useWaypointStore((s) => s.waypoints);
   const currentWaypointIdx = useWaypointStore((s) => s.currentWaypointIdx);
@@ -277,8 +278,9 @@ export function Scene3D({ mode }: { mode: AppMode }) {
       {moveBasePlan.length >= 2 && !useRosStore.getState().isMock && (
         <NavPathVisual path={moveBasePlan} color="#ffffff" opacity={0.5} />
       )}
-      <CameraControls mode={mode} />
+      <CameraControls mode={mode} followRobot={followRobot} />
       <MiniMapBridge />
+      <BreadcrumbTrail />
       <gridHelper args={[50, 50, '#555', '#333']} position={[5, 0, 5]} />
     </Canvas>
     <MiniMapOverlay />

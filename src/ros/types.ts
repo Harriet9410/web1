@@ -18,6 +18,12 @@ export interface RosMsg_Odometry {
       orientation: { x: number; y: number; z: number; w: number };
     };
   };
+  twist: {
+    twist: {
+      linear: { x: number; y: number; z: number };
+      angular: { x: number; y: number; z: number };
+    };
+  };
 }
 
 export interface RosMsg_Path {

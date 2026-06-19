@@ -111,6 +111,10 @@ function subscribeAll(): void {
       z: scenePos.z,
       yaw: Math.PI / 2 - rosYaw,
     });
+    useRobotPoseStore.getState().setVelocity(
+      m.twist.twist.linear.x,
+      m.twist.twist.angular.z
+    );
   });
 
   navPlanSub = new Topic({
@@ -207,6 +211,19 @@ export function publishHRPSpeeds(speeds: SegmentSpeed[]): void {
     messageType: 'std_msgs/String',
   });
   topic.publish({ data: JSON.stringify(speeds) } as never);
+}
+
+export function publishCmdVel(linearX: number, angularZ: number): void {
+  if (!ros) return;
+  const topic = new Topic({
+    ros,
+    name: '/cmd_vel',
+    messageType: 'geometry_msgs/Twist',
+  });
+  topic.publish({
+    linear: { x: linearX, y: 0, z: 0 },
+    angular: { x: 0, y: 0, z: angularZ },
+  } as never);
 }
 
 export { Ros, Topic };
